@@ -4,6 +4,7 @@ package mldsa65
 
 import (
 	"bytes"
+	"crypto"
 	"encoding/json"
 	"testing"
 
@@ -224,5 +225,44 @@ func testACVP(t *testing.T, sub string) {
 		default:
 			t.Fatalf("unknown type %s for %s", abstractGroup.TestType, sub)
 		}
+	}
+}
+
+func TestSignVerifyOpts(t *testing.T) {
+	tests := []struct {
+		name string
+		opts SignOpts
+	}{
+		{"default", SignOpts{Randomize: false, PreHash: crypto.Hash(0)}},
+		{"randomized", SignOpts{Randomize: true, PreHash: crypto.Hash(0)}},
+		{"sha256", SignOpts{Randomize: false, PreHash: crypto.SHA256}},
+		{"sha384", SignOpts{Randomize: true, PreHash: crypto.SHA384}},
+		{"sha512", SignOpts{Randomize: true, PreHash: crypto.SHA512}},
+		{"sha3-256", SignOpts{Randomize: true, PreHash: crypto.SHA3_256}},
+		{"sha3-384", SignOpts{Randomize: true, PreHash: crypto.SHA3_384}},
+		{"sha3-512", SignOpts{Randomize: true, PreHash: crypto.SHA3_512}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pub, priv, err := GenerateKey(nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			msg := []byte("Hello, World!")
+			sig, err := SignWithOpts(priv, msg, nil, tt.opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !VerifyWithOpts(pub, msg, nil, sig, VerifyOpts{PreHash: tt.opts.PreHash}) {
+				t.Fatal("signature failed to verify")
+			}
+			// Negative test
+			msg[0] ^= 0xFF
+			if VerifyWithOpts(pub, msg, nil, sig, VerifyOpts{PreHash: tt.opts.PreHash}) {
+				t.Fatal("signature should not have verified")
+			}
+		})
 	}
 }

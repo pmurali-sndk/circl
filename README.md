@@ -182,11 +182,7 @@ BibTeX Source
                    of this library is to be used as a tool for experimental
                    deployment of cryptographic algorithms targeting Post-Quantum (PQ)
                    and Elliptic Curve Cryptography (ECC).}},
-<<<<<<< HEAD
   note         = {Available at \url{https://github.com/cloudflare/circl}. v1.6.3 Accessed Jan, 2026},
-=======
-  note         = {Available at \url{https://github.com/pmurali-sndk/circl}. v1.6.1 Accessed Apr, 2025},
->>>>>>> c2b83c9 (mod name update)
   month        = jun,
   year         = {2019}
 }

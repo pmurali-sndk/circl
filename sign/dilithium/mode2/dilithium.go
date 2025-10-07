@@ -53,6 +53,7 @@ func NewKeyFromSeed(seed *[SeedSize]byte) (*PublicKey, *PrivateKey) {
 // It will panic if signature is not of length at least SignatureSize.
 func signTo(sk *PrivateKey, msg, sig []byte) {
 	var rnd [32]byte
+
 	internal.SignTo(
 		(*internal.PrivateKey)(sk),
 		func(w io.Writer) {
@@ -174,7 +175,6 @@ func (sk *PrivateKey) Seed() []byte {
 func (sk *PrivateKey) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (
 	sig []byte, err error) {
 	var ret [SignatureSize]byte
-
 	if opts != nil && opts.HashFunc() != crypto.Hash(0) {
 		return nil, errors.New("dilithium: cannot sign hashed message")
 	}
