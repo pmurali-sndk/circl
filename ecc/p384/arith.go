@@ -6,7 +6,7 @@ package p384
 import (
 	"math/big"
 
-	"github.com/cloudflare/circl/internal/conv"
+	"github.com/pmurali-sndk/circl/internal/conv"
 )
 
 const sizeFp = 48

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cloudflare/circl/group"
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/group"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 type commonClient interface {

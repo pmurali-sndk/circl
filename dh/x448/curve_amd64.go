@@ -4,7 +4,7 @@
 package x448
 
 import (
-	fp "github.com/cloudflare/circl/math/fp448"
+	fp "github.com/pmurali-sndk/circl/math/fp448"
 	"golang.org/x/sys/cpu"
 )
 

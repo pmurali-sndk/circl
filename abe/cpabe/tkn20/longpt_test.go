@@ -7,9 +7,9 @@ import (
 	"io"
 	"testing"
 
-	cpabe "github.com/cloudflare/circl/abe/cpabe/tkn20"
-	"github.com/cloudflare/circl/internal/test"
-	"github.com/cloudflare/circl/xof"
+	cpabe "github.com/pmurali-sndk/circl/abe/cpabe/tkn20"
+	"github.com/pmurali-sndk/circl/internal/test"
+	"github.com/pmurali-sndk/circl/xof"
 )
 
 func TestLongPlaintext(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/cloudflare/circl/sign"
-	"github.com/cloudflare/circl/sign/schemes"
+	"github.com/pmurali-sndk/circl/sign"
+	"github.com/pmurali-sndk/circl/sign/schemes"
 
 	"golang.org/x/crypto/cryptobyte"
 	casn1 "golang.org/x/crypto/cryptobyte/asn1"

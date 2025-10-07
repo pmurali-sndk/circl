@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/asn1"
 
-	"github.com/cloudflare/circl/sign"
+	"github.com/pmurali-sndk/circl/sign"
 )
 
 var sch sign.Scheme = &scheme{}

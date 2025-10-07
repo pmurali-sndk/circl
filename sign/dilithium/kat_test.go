@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudflare/circl/internal/nist"
-	"github.com/cloudflare/circl/internal/test"
-	"github.com/cloudflare/circl/sign/schemes"
+	"github.com/pmurali-sndk/circl/internal/nist"
+	"github.com/pmurali-sndk/circl/internal/test"
+	"github.com/pmurali-sndk/circl/sign/schemes"
 )
 
 func TestPQCgenKATSign(t *testing.T) {

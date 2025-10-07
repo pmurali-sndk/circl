@@ -7,8 +7,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/cloudflare/circl/ecc/fourq"
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/ecc/fourq"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 func TestDH(t *testing.T) {

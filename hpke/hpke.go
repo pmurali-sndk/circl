@@ -19,7 +19,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudflare/circl/kem"
+	"github.com/pmurali-sndk/circl/kem"
 )
 
 const versionLabel = "HPKE-v1"

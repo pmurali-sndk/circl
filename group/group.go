@@ -7,7 +7,7 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/cloudflare/circl/internal/conv"
+	"github.com/pmurali-sndk/circl/internal/conv"
 	"golang.org/x/crypto/cryptobyte"
 )
 

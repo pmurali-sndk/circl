@@ -9,8 +9,8 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudflare/circl/internal/conv"
-	"github.com/cloudflare/circl/internal/sha3"
+	"github.com/pmurali-sndk/circl/internal/conv"
+	"github.com/pmurali-sndk/circl/internal/sha3"
 	"golang.org/x/crypto/cryptobyte"
 )
 

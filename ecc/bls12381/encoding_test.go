@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 func isEqual(p, q interface{}) bool {

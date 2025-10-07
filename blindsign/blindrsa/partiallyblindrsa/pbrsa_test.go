@@ -13,7 +13,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cloudflare/circl/blindsign/blindrsa/internal/keys"
+	"github.com/pmurali-sndk/circl/blindsign/blindrsa/internal/keys"
 )
 
 const (

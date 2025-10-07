@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cloudflare/circl/expander"
-	"github.com/cloudflare/circl/internal/test"
-	"github.com/cloudflare/circl/xof"
+	"github.com/pmurali-sndk/circl/expander"
+	"github.com/pmurali-sndk/circl/internal/test"
+	"github.com/pmurali-sndk/circl/xof"
 )
 
 func TestExpander(t *testing.T) {

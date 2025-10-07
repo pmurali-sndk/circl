@@ -5,8 +5,8 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudflare/circl/dh/sidh/internal/common"
-	"github.com/cloudflare/circl/internal/sha3"
+	"github.com/pmurali-sndk/circl/dh/sidh/internal/common"
+	"github.com/pmurali-sndk/circl/internal/sha3"
 )
 
 // SIKE KEM interface.

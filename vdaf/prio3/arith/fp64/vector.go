@@ -8,9 +8,9 @@ import (
 	"math/bits"
 	"slices"
 
-	"github.com/cloudflare/circl/internal/conv"
-	"github.com/cloudflare/circl/internal/sha3"
-	"github.com/cloudflare/circl/math"
+	"github.com/pmurali-sndk/circl/internal/conv"
+	"github.com/pmurali-sndk/circl/internal/sha3"
+	"github.com/pmurali-sndk/circl/math"
 	"golang.org/x/crypto/cryptobyte"
 )
 

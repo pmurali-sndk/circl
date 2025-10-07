@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cloudflare/circl/group"
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/group"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 func TestHashToElement(t *testing.T) {

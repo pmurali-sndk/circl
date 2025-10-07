@@ -5,7 +5,7 @@ import (
 	"hash"
 	"io"
 
-	"github.com/cloudflare/circl/xof"
+	"github.com/pmurali-sndk/circl/xof"
 	_ "golang.org/x/crypto/sha3"
 )
 

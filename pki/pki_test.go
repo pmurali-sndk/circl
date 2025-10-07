@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cloudflare/circl/internal/test"
-	"github.com/cloudflare/circl/pki"
-	"github.com/cloudflare/circl/sign"
-	"github.com/cloudflare/circl/sign/schemes"
+	"github.com/pmurali-sndk/circl/internal/test"
+	"github.com/pmurali-sndk/circl/pki"
+	"github.com/pmurali-sndk/circl/sign"
+	"github.com/pmurali-sndk/circl/sign/schemes"
 )
 
 func TestPEM(t *testing.T) {
