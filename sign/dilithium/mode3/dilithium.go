@@ -51,9 +51,8 @@ func NewKeyFromSeed(seed *[SeedSize]byte) (*PublicKey, *PrivateKey) {
 
 // SignTo signs the given message and writes the signature into signature.
 // It will panic if signature is not of length at least SignatureSize.
-func SignTo(sk *PrivateKey, msg, sig []byte) {
+func signTo(sk *PrivateKey, msg, sig []byte) {
 	var rnd [32]byte
-
 	internal.SignTo(
 		(*internal.PrivateKey)(sk),
 		func(w io.Writer) {
@@ -64,8 +63,18 @@ func SignTo(sk *PrivateKey, msg, sig []byte) {
 	)
 }
 
+// SignTo signs the given message and writes the signature into signature.
+// It will panic if signature is not of length at least SignatureSize.
+func SignTo(sk *PrivateKey, msg, sig []byte) {
+	signTo(sk, msg, sig)
+}
+
+// SignHash calculates pre-hash for msg, signs it and writes the signature
+// into sig. It will panic if sig is not of length at least SignatureSize.
+
 // Verify checks whether the given signature by pk on msg is valid.
-func Verify(pk *PublicKey, msg, sig []byte) bool {
+func verify(pk *PublicKey, msg, sig []byte) bool {
+
 	return internal.Verify(
 		(*internal.PublicKey)(pk),
 		func(w io.Writer) {
@@ -74,6 +83,13 @@ func Verify(pk *PublicKey, msg, sig []byte) bool {
 		sig,
 	)
 }
+
+// Verify checks whether the given signature by pk on msg is valid.
+func Verify(pk *PublicKey, msg, sig []byte) bool {
+	return verify(pk, msg, sig)
+}
+
+// Verify checks whether the given signature by pk on hash of msg is valid.
 
 // Sets pk to the public key encoded in buf.
 func (pk *PublicKey) Unpack(buf *[PublicKeySize]byte) {
@@ -158,10 +174,10 @@ func (sk *PrivateKey) Seed() []byte {
 func (sk *PrivateKey) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (
 	sig []byte, err error) {
 	var ret [SignatureSize]byte
-
 	if opts.HashFunc() != crypto.Hash(0) {
 		return nil, errors.New("dilithium: cannot sign hashed message")
 	}
+
 	SignTo(sk, msg, ret[:])
 
 	return ret[:], nil
