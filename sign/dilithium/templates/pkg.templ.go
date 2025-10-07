@@ -75,9 +75,9 @@ func NewKeyFromSeed(seed *[SeedSize]byte) (*PublicKey, *PrivateKey) {
 //
 // ctx is the optional context string. Errors if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
-func SignTo(sk *PrivateKey, msg, ctx []byte, randomized bool, sig []byte) error {
+func signTo(sk *PrivateKey, msg, ctx []byte, randomized bool, preHash bool, sig []byte) error {
 {{- else }}
-func SignTo(sk *PrivateKey, msg, sig []byte) {
+func signTo(sk *PrivateKey, msg, sig []byte) {
 {{- end }}
 	var rnd [32]byte
 
@@ -94,11 +94,17 @@ func SignTo(sk *PrivateKey, msg, sig []byte) {
 	}
 	{{- end }}
 
+	{{- if .NIST }}
+	signMode := []byte{0}
+	if preHash {
+		signMode[0] = 1
+	}
+	{{- end }}
 	internal.SignTo(
 		(*internal.PrivateKey)(sk),
 		func (w io.Writer) {
 			{{- if .NIST }}
-			_, _ = w.Write([]byte{0})
+			_, _ = w.Write(signMode)
 			_, _ = w.Write([]byte{byte(len(ctx))})
 
 			if ctx != nil {
@@ -116,6 +122,36 @@ func SignTo(sk *PrivateKey, msg, sig []byte) {
 	return nil
 	{{- end }}
 }
+
+// SignTo signs the given message and writes the signature into signature.
+// It will panic if signature is not of length at least SignatureSize.
+{{- if .NIST }}
+//
+// ctx is the optional context string. Errors if ctx is larger than 255 bytes.
+// A nil context string is equivalent to an empty context string.
+func SignTo(sk *PrivateKey, msg, ctx []byte, randomized bool, sig []byte) error {
+	return signTo(sk, msg, ctx, randomized, false, sig)
+{{- else }}
+func SignTo(sk *PrivateKey, msg, sig []byte) {
+	signTo(sk, msg, sig)
+{{- end }}
+}
+
+// SignHash calculates pre-hash for msg, signs it and writes the signature
+// into sig. It will panic if sig is not of length at least SignatureSize.
+{{- if .NIST }}
+//
+// ctx is the optional context string. Fails if ctx is larger than 255 bytes.
+// A nil context string is equivalent to an empty context string.
+func SignHash(sk *PrivateKey, msg, ctx []byte, randomized bool, cryptoHash crypto.Hash, sig []byte) error {
+	preHash, err := calculatePrehash(msg, cryptoHash)
+	if err != nil {
+		return err
+	}
+	return signTo(sk, preHash, ctx, randomized, true, sig)
+}
+{{- end }}
+
 
 {{- if .NIST }}
 // Do not use. Implements ML-DSA.Sign_internal used for compatibility tests.
@@ -149,18 +185,25 @@ func unsafeVerifyInternal(pk *PublicKey, msg, sig []byte) bool {
 //
 // ctx is the optional context string. Fails if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
-func Verify(pk *PublicKey, msg, ctx, sig []byte) bool {
+func verify(pk *PublicKey, msg, ctx, sig []byte, preHash bool) bool {
 	if len(ctx) > 255 {
 		return false
 	}
 {{- else }}
-func Verify(pk *PublicKey, msg, sig []byte) bool {
+func verify(pk *PublicKey, msg, sig []byte) bool {
 {{- end }}
+	{{- if .NIST }}
+	signMode := []byte{0}
+	if preHash {
+		signMode[0] = 1
+	}
+	{{- end }}
+
 	return internal.Verify(
 		(*internal.PublicKey)(pk),
 		func (w io.Writer) {
 			{{- if .NIST }}
-			_, _ = w.Write([]byte{0})
+			_, _ = w.Write(signMode)
 			_, _ = w.Write([]byte{byte(len(ctx))})
 
 			if ctx != nil {
@@ -173,6 +216,33 @@ func Verify(pk *PublicKey, msg, sig []byte) bool {
 		sig,
 	)
 }
+
+// Verify checks whether the given signature by pk on msg is valid.
+{{- if .NIST }}
+//
+// ctx is the optional context string. Fails if ctx is larger than 255 bytes.
+// A nil context string is equivalent to an empty context string.
+func Verify(pk *PublicKey, msg, ctx, sig []byte) bool {
+	return verify(pk, msg, ctx, sig, false)
+{{- else }}
+func Verify(pk *PublicKey, msg, sig []byte) bool {
+	return verify(pk, msg, sig)
+{{- end }}
+}
+
+// Verify checks whether the given signature by pk on hash of msg is valid.
+{{- if .NIST }}
+//
+// ctx is the optional context string. Fails if ctx is larger than 255 bytes.
+// A nil context string is equivalent to an empty context string.
+func VerifyHash(pk *PublicKey, msg, ctx, sig []byte, cryptoHash crypto.Hash) bool {
+	preHash, err := calculatePrehash(msg, cryptoHash)
+	if err != nil {
+		return false
+	}
+	return verify(pk, preHash, ctx, sig, true)
+}
+{{- end }}
 
 // Sets pk to the public key encoded in buf.
 func (pk *PublicKey) Unpack(buf *[PublicKeySize]byte) {
@@ -245,6 +315,30 @@ func (sk *PrivateKey) Seed() []byte {
 	return (*internal.PrivateKey)(sk).Seed()
 }
 
+{{- if .NIST }}
+func calculatePrehash(msg []byte, cryptoHash crypto.Hash) ([]byte, error) {
+	var oidBytes []byte
+	switch cryptoHash {
+	case crypto.SHA256:
+		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 1})
+	case crypto.SHA384:
+		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 2})
+	case crypto.SHA512:
+		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 3})
+	case crypto.SHA3_256:
+		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 8})
+	case crypto.SHA3_384:
+		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 9})
+	case crypto.SHA3_512:
+		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 10})
+	default:
+		return nil, errors.New("unsupported prehash function")
+	}
+	h := cryptoHash.New()
+	h.Write(msg)
+	return h.Sum(oidBytes), nil
+}
+{{- end }}
 // Sign signs the given message.
 //
 // opts.HashFunc() must return zero, which can be achieved by passing
@@ -258,15 +352,24 @@ func (sk *PrivateKey) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (
 	sig []byte, err error) {
 	var ret [SignatureSize]byte
 
+	{{- if .NIST }}
+	preHash := false
+	if opts != nil && opts.HashFunc() != crypto.Hash(0) {
+		msg, err = calculatePrehash(msg, opts.HashFunc())
+		if err != nil {
+			return nil, err
+		}
+		preHash = true
+	}
+
+	if err = signTo(sk, msg, nil, false, preHash, ret[:]); err != nil {
+		return nil, err
+	}
+	{{- else }}
 	if opts != nil && opts.HashFunc() != crypto.Hash(0) {
 		return nil, errors.New("dilithium: cannot sign hashed message")
 	}
 
-	{{- if .NIST }}
-	if err = SignTo(sk, msg, nil, false, ret[:]); err != nil {
-		return nil, err
-	}
-	{{- else }}
 	SignTo(sk, msg, ret[:])
 	{{- end }}
 
@@ -356,7 +459,12 @@ func (*scheme) Sign(
 	}
 
 	{{- if .NIST }}
-	err := SignTo(priv, msg, ctx, false, sig)
+	var err error
+	if opts != nil && opts.Hash != crypto.Hash(0) {
+		err = SignHash(priv, msg, ctx, false, opts.Hash, sig)
+	} else {
+		err = SignTo(priv, msg, ctx, false, sig)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -387,7 +495,11 @@ func (*scheme) Verify(
 		{{- end }}
 	}
 	{{- if .NIST }}
-	return Verify(pub, msg, ctx, sig)
+	if opts != nil && opts.Hash != crypto.Hash(0) {
+		return VerifyHash(pub, msg, ctx, sig, opts.Hash)
+	} else {
+		return Verify(pub, msg, ctx, sig)
+	}
 	{{- else }}
 	return Verify(pub, msg, sig)
 	{{- end }}

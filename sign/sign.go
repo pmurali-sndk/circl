@@ -15,6 +15,7 @@ type SignatureOpts struct {
 	// If non-empty, includes the given context in the signature if supported
 	// and will cause an error during signing otherwise.
 	Context string
+	Hash    crypto.Hash // Hash function to use (if applicable).
 }
 
 // A public key is used to verify a signature set by the corresponding private
