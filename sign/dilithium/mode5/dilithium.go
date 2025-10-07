@@ -53,6 +53,7 @@ func NewKeyFromSeed(seed *[SeedSize]byte) (*PublicKey, *PrivateKey) {
 // It will panic if signature is not of length at least SignatureSize.
 func signTo(sk *PrivateKey, msg, sig []byte) {
 	var rnd [32]byte
+
 	internal.SignTo(
 		(*internal.PrivateKey)(sk),
 		func(w io.Writer) {

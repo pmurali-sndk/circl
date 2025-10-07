@@ -6,13 +6,24 @@ package mldsa44
 import (
 	"crypto"
 	cryptoRand "crypto/rand"
+	"crypto/sha256"
+	"crypto/sha3"
+	"crypto/sha512"
 	"encoding/asn1"
 	"errors"
+	"hash"
 	"io"
 
 	"github.com/pmurali-sndk/circl/sign"
 	common "github.com/pmurali-sndk/circl/sign/internal/dilithium"
 	"github.com/pmurali-sndk/circl/sign/mldsa/mldsa44/internal"
+)
+
+type SignMode byte
+
+const (
+	SignModePure SignMode = iota
+	SignModePreHash
 )
 
 const (
@@ -53,7 +64,7 @@ func NewKeyFromSeed(seed *[SeedSize]byte) (*PublicKey, *PrivateKey) {
 //
 // ctx is the optional context string. Errors if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
-func signTo(sk *PrivateKey, msg, ctx []byte, randomized bool, preHash bool, sig []byte) error {
+func signTo(sk *PrivateKey, signMode SignMode, msg, ctx []byte, randomized bool, sig []byte) error {
 	var rnd [32]byte
 	if randomized {
 		_, err := cryptoRand.Read(rnd[:])
@@ -65,14 +76,11 @@ func signTo(sk *PrivateKey, msg, ctx []byte, randomized bool, preHash bool, sig 
 	if len(ctx) > 255 {
 		return sign.ErrContextTooLong
 	}
-	signMode := []byte{0}
-	if preHash {
-		signMode[0] = 1
-	}
+
 	internal.SignTo(
 		(*internal.PrivateKey)(sk),
 		func(w io.Writer) {
-			_, _ = w.Write(signMode)
+			_, _ = w.Write([]byte{byte(signMode)})
 			_, _ = w.Write([]byte{byte(len(ctx))})
 
 			if ctx != nil {
@@ -92,20 +100,32 @@ func signTo(sk *PrivateKey, msg, ctx []byte, randomized bool, preHash bool, sig 
 // ctx is the optional context string. Errors if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
 func SignTo(sk *PrivateKey, msg, ctx []byte, randomized bool, sig []byte) error {
-	return signTo(sk, msg, ctx, randomized, false, sig)
+	return signTo(sk, SignModePure, msg, ctx, randomized, sig)
 }
 
 // SignHash calculates pre-hash for msg, signs it and writes the signature
 // into sig. It will panic if sig is not of length at least SignatureSize.
-//
+type SignOpts struct {
+	Randomize bool
+	PreHash   crypto.Hash
+}
+
 // ctx is the optional context string. Fails if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
-func SignHash(sk *PrivateKey, msg, ctx []byte, randomized bool, cryptoHash crypto.Hash, sig []byte) error {
-	preHash, err := calculatePrehash(msg, cryptoHash)
-	if err != nil {
-		return err
+func SignWithOpts(sk *PrivateKey, msg, ctx []byte, opts SignOpts) (sig []byte, err error) {
+	sig = make([]byte, SignatureSize)
+	signMode := SignModePure
+	if opts.PreHash != crypto.Hash(0) {
+		msg, err = calculatePrehash(msg, opts.PreHash)
+		if err != nil {
+			return nil, err
+		}
+		signMode = SignModePreHash
 	}
-	return signTo(sk, preHash, ctx, randomized, true, sig)
+	if err = signTo(sk, signMode, msg, ctx, opts.Randomize, sig); err != nil {
+		return nil, err
+	}
+	return sig, nil
 }
 
 // Do not use. Implements ML-DSA.Sign_internal used for compatibility tests.
@@ -137,19 +157,15 @@ func unsafeVerifyInternal(pk *PublicKey, msg, sig []byte) bool {
 //
 // ctx is the optional context string. Fails if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
-func verify(pk *PublicKey, msg, ctx, sig []byte, preHash bool) bool {
+func verify(pk *PublicKey, signMode SignMode, msg, ctx, sig []byte) bool {
 	if len(ctx) > 255 {
 		return false
-	}
-	signMode := []byte{0}
-	if preHash {
-		signMode[0] = 1
 	}
 
 	return internal.Verify(
 		(*internal.PublicKey)(pk),
 		func(w io.Writer) {
-			_, _ = w.Write(signMode)
+			_, _ = w.Write([]byte{byte(signMode)})
 			_, _ = w.Write([]byte{byte(len(ctx))})
 
 			if ctx != nil {
@@ -166,19 +182,27 @@ func verify(pk *PublicKey, msg, ctx, sig []byte, preHash bool) bool {
 // ctx is the optional context string. Fails if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
 func Verify(pk *PublicKey, msg, ctx, sig []byte) bool {
-	return verify(pk, msg, ctx, sig, false)
+	return verify(pk, SignModePure, msg, ctx, sig)
 }
 
 // Verify checks whether the given signature by pk on hash of msg is valid.
-//
+type VerifyOpts struct {
+	PreHash crypto.Hash
+}
+
 // ctx is the optional context string. Fails if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
-func VerifyHash(pk *PublicKey, msg, ctx, sig []byte, cryptoHash crypto.Hash) bool {
-	preHash, err := calculatePrehash(msg, cryptoHash)
-	if err != nil {
-		return false
+func VerifyWithOpts(pk *PublicKey, msg, ctx, sig []byte, opts VerifyOpts) bool {
+	signMode := SignModePure
+	if opts.PreHash != crypto.Hash(0) {
+		preHash, err := calculatePrehash(msg, opts.PreHash)
+		if err != nil {
+			return false
+		}
+		signMode = SignModePreHash
+		msg = preHash
 	}
-	return verify(pk, preHash, ctx, sig, true)
+	return verify(pk, signMode, msg, ctx, sig)
 }
 
 // Sets pk to the public key encoded in buf.
@@ -251,25 +275,33 @@ func (sk *PrivateKey) UnmarshalBinary(data []byte) error {
 func (sk *PrivateKey) Seed() []byte {
 	return (*internal.PrivateKey)(sk).Seed()
 }
+
+// Calculate PreHash generates the pre hash of the message using the hash specified
 func calculatePrehash(msg []byte, cryptoHash crypto.Hash) ([]byte, error) {
 	var oidBytes []byte
+	var h hash.Hash
 	switch cryptoHash {
 	case crypto.SHA256:
 		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 1})
+		h = sha256.New()
 	case crypto.SHA384:
 		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 2})
+		h = sha512.New384()
 	case crypto.SHA512:
 		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 3})
+		h = sha512.New()
 	case crypto.SHA3_256:
 		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 8})
+		h = sha3.New256()
 	case crypto.SHA3_384:
 		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 9})
+		h = sha3.New384()
 	case crypto.SHA3_512:
 		oidBytes, _ = asn1.Marshal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 10})
+		h = sha3.New512()
 	default:
 		return nil, errors.New("unsupported prehash function")
 	}
-	h := cryptoHash.New()
 	h.Write(msg)
 	return h.Sum(oidBytes), nil
 }
@@ -286,16 +318,16 @@ func calculatePrehash(msg []byte, cryptoHash crypto.Hash) ([]byte, error) {
 func (sk *PrivateKey) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) (
 	sig []byte, err error) {
 	var ret [SignatureSize]byte
-	preHash := false
+	signMode := SignModePure
 	if opts.HashFunc() != crypto.Hash(0) {
 		msg, err = calculatePrehash(msg, opts.HashFunc())
 		if err != nil {
 			return nil, err
 		}
-		preHash = true
+		signMode = SignModePreHash
 	}
 
-	if err = signTo(sk, msg, nil, false, preHash, ret[:]); err != nil {
+	if err = signTo(sk, signMode, msg, nil, false, ret[:]); err != nil {
 		return nil, err
 	}
 
@@ -373,7 +405,7 @@ func (*scheme) Sign(
 	}
 	var err error
 	if opts != nil && opts.Hash != crypto.Hash(0) {
-		err = SignHash(priv, msg, ctx, false, opts.Hash, sig)
+		sig, err = SignWithOpts(priv, msg, ctx, SignOpts{Randomize: false, PreHash: opts.Hash})
 	} else {
 		err = SignTo(priv, msg, ctx, false, sig)
 	}
@@ -398,7 +430,7 @@ func (*scheme) Verify(
 		ctx = []byte(opts.Context)
 	}
 	if opts != nil && opts.Hash != crypto.Hash(0) {
-		return VerifyHash(pub, msg, ctx, sig, opts.Hash)
+		return VerifyWithOpts(pub, msg, ctx, sig, VerifyOpts{PreHash: opts.Hash})
 	} else {
 		return Verify(pub, msg, ctx, sig)
 	}
