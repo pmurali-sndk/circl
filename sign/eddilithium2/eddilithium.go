@@ -7,10 +7,10 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudflare/circl/internal/sha3"
-	"github.com/cloudflare/circl/sign"
-	"github.com/cloudflare/circl/sign/dilithium/mode2"
-	"github.com/cloudflare/circl/sign/ed25519"
+	"github.com/pmurali-sndk/circl/internal/sha3"
+	"github.com/pmurali-sndk/circl/sign"
+	"github.com/pmurali-sndk/circl/sign/dilithium/mode2"
+	"github.com/pmurali-sndk/circl/sign/ed25519"
 )
 
 const (

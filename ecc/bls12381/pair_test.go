@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cloudflare/circl/ecc/bls12381/ff"
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/ecc/bls12381/ff"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 func TestProdPair(t *testing.T) {

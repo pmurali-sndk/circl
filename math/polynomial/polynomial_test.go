@@ -3,9 +3,9 @@ package polynomial_test
 import (
 	"testing"
 
-	"github.com/cloudflare/circl/group"
-	"github.com/cloudflare/circl/internal/test"
-	"github.com/cloudflare/circl/math/polynomial"
+	"github.com/pmurali-sndk/circl/group"
+	"github.com/pmurali-sndk/circl/internal/test"
+	"github.com/pmurali-sndk/circl/math/polynomial"
 )
 
 func TestPolyDegree(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/cloudflare/circl/simd/keccakf1600/internal/asm
+module github.com/pmurali-sndk/circl/simd/keccakf1600/internal/asm
 
 go 1.12
 

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudflare/circl/dh/sidh/internal/common"
-	. "github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/dh/sidh/internal/common"
+	. "github.com/pmurali-sndk/circl/internal/test"
 )
 
 type sikeVec struct {

@@ -5,7 +5,7 @@ package p503
 
 import (
 	"errors"
-	. "github.com/cloudflare/circl/dh/sidh/internal/common"
+	. "github.com/pmurali-sndk/circl/dh/sidh/internal/common"
 	"math"
 )
 

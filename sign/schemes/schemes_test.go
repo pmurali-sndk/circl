@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cloudflare/circl/sign"
-	"github.com/cloudflare/circl/sign/schemes"
+	"github.com/pmurali-sndk/circl/sign"
+	"github.com/pmurali-sndk/circl/sign/schemes"
 )
 
 func TestCaseSensitivity(t *testing.T) {

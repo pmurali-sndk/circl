@@ -8,8 +8,8 @@ import (
 	"encoding"
 	"os"
 
-	cpabe "github.com/cloudflare/circl/abe/cpabe/tkn20"
-	"github.com/cloudflare/circl/xof"
+	cpabe "github.com/pmurali-sndk/circl/abe/cpabe/tkn20"
+	"github.com/pmurali-sndk/circl/xof"
 )
 
 func writeToFile(name string, data []byte) {

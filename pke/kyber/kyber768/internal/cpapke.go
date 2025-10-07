@@ -5,9 +5,9 @@ package internal
 import (
 	"bytes"
 
-	"github.com/cloudflare/circl/internal/sha3"
-	"github.com/cloudflare/circl/kem"
-	"github.com/cloudflare/circl/pke/kyber/internal/common"
+	"github.com/pmurali-sndk/circl/internal/sha3"
+	"github.com/pmurali-sndk/circl/kem"
+	"github.com/pmurali-sndk/circl/pke/kyber/internal/common"
 )
 
 // A Kyber.CPAPKE private key.

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 func testWotsPlus(t *testing.T, p *params) {

@@ -5,7 +5,7 @@ package p751
 
 import (
 	crand "crypto/rand"
-	. "github.com/cloudflare/circl/dh/sidh/internal/common"
+	. "github.com/pmurali-sndk/circl/dh/sidh/internal/common"
 )
 
 // -----------------------------------------------------------------------------

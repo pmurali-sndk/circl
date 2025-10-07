@@ -8,8 +8,8 @@ import (
 	"math/big"
 
 	r255 "github.com/bwesterb/go-ristretto"
-	"github.com/cloudflare/circl/expander"
-	"github.com/cloudflare/circl/internal/conv"
+	"github.com/pmurali-sndk/circl/expander"
+	"github.com/pmurali-sndk/circl/internal/conv"
 	"golang.org/x/crypto/cryptobyte"
 )
 

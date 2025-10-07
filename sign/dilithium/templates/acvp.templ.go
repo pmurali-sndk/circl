@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cloudflare/circl/internal/test"
+	"github.com/pmurali-sndk/circl/internal/test"
 )
 
 func TestACVP(t *testing.T) {

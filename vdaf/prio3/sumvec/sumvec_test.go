@@ -3,8 +3,8 @@ package sumvec
 import (
 	"testing"
 
-	"github.com/cloudflare/circl/internal/test"
-	"github.com/cloudflare/circl/vdaf/prio3/internal/flp_test"
+	"github.com/pmurali-sndk/circl/internal/test"
+	"github.com/pmurali-sndk/circl/vdaf/prio3/internal/flp_test"
 )
 
 func TestSumVec(t *testing.T) {
