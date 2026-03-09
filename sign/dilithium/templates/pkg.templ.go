@@ -45,6 +45,7 @@ type SignMode byte
 const (
 	SignModePure	SignMode = iota
 	SignModePreHash
+	SignModeExternalMu
 )
 {{- end }}
 
@@ -104,8 +105,15 @@ func signTo(sk *PrivateKey, msg, sig []byte) {
 	if len(ctx) > 255 {
 		return sign.ErrContextTooLong
 	}
-	{{- end }}
 
+	if signMode == SignModeExternalMu {
+		if len(msg) != 64 {
+			return errors.New("message must be of length 64 bytes for external mu mode")
+		}
+		internal.SignToMu((*internal.PrivateKey)(sk), msg, rnd, sig)
+		return nil
+	}
+	{{- end }}
 	internal.SignTo(
 		(*internal.PrivateKey)(sk),
 		func (w io.Writer) {
@@ -149,19 +157,25 @@ func SignTo(sk *PrivateKey, msg, sig []byte) {
 type SignOpts struct {
 	Randomize bool
 	PreHash   crypto.Hash
+	ExternalMu bool
 }
 //
 // ctx is the optional context string. Fails if ctx is larger than 255 bytes.
 // A nil context string is equivalent to an empty context string.
 func SignWithOpts(sk *PrivateKey, msg, ctx []byte, opts SignOpts) (sig []byte, err error) {
 	sig = make([]byte, SignatureSize)
-	signMode := SignModePure
-	if opts.PreHash != crypto.Hash(0) {
+	var signMode SignMode
+	switch {
+	case opts.ExternalMu:
+		signMode = SignModeExternalMu
+	case opts.PreHash != crypto.Hash(0):
 		msg, err = calculatePrehash(msg, opts.PreHash)
 		if err != nil {
 			return nil, err
 		}
 		signMode = SignModePreHash
+	default:
+		signMode = SignModePure
 	}
 	if err = signTo(sk, signMode, msg, ctx, opts.Randomize, sig); err != nil {
 		return nil, err
